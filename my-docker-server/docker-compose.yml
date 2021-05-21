@@ -9,9 +9,6 @@ networks:
       config:
         - subnet: ${MDS_SUBNET}
 
-  default:
-    name: my-docker-server_nginx-proxy
-
 services:
 
   # nginx-proxy to proxy all our port 80 web apps
