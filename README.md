@@ -3,9 +3,11 @@ Some docker-compose setups for my-docker-server
 
 ## Usage
 
-Setup your IP address and domain name in the .env file (or create your own .env)
+Setup your IP address and domain name in the .env file (or create your own .env.local and use `make local`)
 
 Setup your DNS in the `etc-dnsmasq.d/02-custom-dns.conf` file
+
+There are various `make` commands to do things
 
 ## Components
 

@@ -1,4 +1,4 @@
-CONTAINERS=wireguard pihole unbound nginx-proxy
+CONTAINERS=wireguard pi-hole unbound nginx-proxy
 
 help:
 	@echo "-------------------------------------"
@@ -11,7 +11,8 @@ help:
 	@echo "detached \t- runs docker-compose up -d"
 	@echo "nuke \t\t- forcefully removes all the containers and their data: $(CONTAINERS)"
 	@echo "rebuild \t- runs nuke then detached"
-	@echo ""
+	@echo "local \t\t- runs nuke then detached using .env.local"
+	@echo "windows \t- runs nuke then docker compose up -d"
 	@echo ""
 	@echo "-------------------------------------"
 	@echo ""
@@ -34,7 +35,16 @@ nuke:
 	sudo rm -rf etc-unbound/dev
 	sudo rm -rf etc-unbound/var
 	rm -rf wireguard-config
+	docker network prune
 
 rebuild:
 	make nuke
 	make detached
+
+local:
+	make nuke
+	docker-compose --env-file .env.local up -d
+
+windows:
+	make nuke
+	docker compose up -d
