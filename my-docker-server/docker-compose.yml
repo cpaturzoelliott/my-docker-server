@@ -1,12 +1,23 @@
 version: "3"
 
-# Setup an nginx-proxy network to connect all our web apps to
 networks:
+  # Setup an nginx-proxy network to connect all our web apps to
+  nginx-proxy:
+    external: true
+
+  # Setup a network for unbound, pihole & Wireguard to talk to each other
+  private_network:
+    ipam:
+      driver: default
+      config:
+        - subnet: ${MDS_SUBNET}
+
   default:
-    external:
-      name: nginx-proxy
+    external: true
+    name: nginx-proxy
 
 services:
+
   # nginx-proxy to proxy all our port 80 web apps
   nginx-proxy:
     image: jwilder/nginx-proxy
@@ -17,25 +28,76 @@ services:
       - ./etc-nginx/conf.d/:/etc/nginx.conf.d/
       - /var/run/docker.sock:/tmp/docker.sock
 
+  # unbound validating, recursive, caching DNS resolver
+  unbound:
+    image: "mvance/unbound:latest"
+    container_name: unbound
+    restart: unless-stopped
+    hostname: unbound
+    volumes:
+      - ./etc-unbound/:/opt/unbound/etc/unbound/
+    networks:
+      private_network:
+        ipv4_address: ${MDS_UNBOUND_IP_ADDRESS}
+
   # pihole DNS server with a sinkhole to block ads & trackers with additional trackers loaded
   pihole:
-    depends_on:
-      - nginx-proxy
+    depends_on: [ nginx-proxy, unbound ]
     container_name: pihole
     image: pihole/pihole:latest
+    restart: unless-stopped
+    hostname: ${MDS_PIHOLE_HOSTNAME}
+    networks:
+      private_network:
+        ipv4_address: ${MDS_PIHOLE_IP_ADDRESS}
+    dns:
+      - 127.0.0.1
+      - ${MDS_UNBOUND_IP_ADDRESS}
     ports:
       - 53:53/tcp
       - 53:53/udp
     # We only expose the port here as nginx will proxy it to us
     expose:
       - 80
+    cap_add:
+      - NET_ADMIN
     environment:
-      TZ: ${MDS_TIMEZONE}
-      WEBPASSWORD: ${MDS_PIHOLE_PASSWORD}
-      VIRTUAL_HOST: ${MDS_PIHOLE_HOSTNAME}.${MDS_DOMAIN_NAME}
+      - TZ=${MDS_TIMEZONE}
+      - WEBPASSWORD=${MDS_PIHOLE_PASSWORD}
+      - VIRTUAL_HOST=${MDS_PIHOLE_HOSTNAME}.${MDS_DOMAIN_NAME}
     volumes:
       - ./etc-pihole/:/etc/pihole/
       - ./etc-dnsmasq.d/:/etc/dnsmasq.d/
+
+  # Wireguard VPN hooked up to the pihole to enable on the go ad-blocking
+  wireguard:
+    depends_on: [ unbound, pihole ]
+    image: ghcr.io/linuxserver/wireguard
+    container_name: wireguard
+    restart: unless-stopped
     cap_add:
       - NET_ADMIN
-    restart: unless-stopped
+      - SYS_MODULE
+    networks:
+      private_network:
+        ipv4_address: ${MDS_WIREGUARD_IP_ADDRESS}
+    ports:
+      - ${MDS_WIREGUARD_PORT}:${MDS_WIREGUARD_PORT}/udp
+    dns:
+      - ${MDS_PIHOLE_IP_ADDRESS}
+      - ${MDS_UNBOUND_IP_ADDRESS}
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${MDS_TIMEZONE}
+      - SERVERURL=${MDS_WIREGUARD_SERVER_URL}
+      - SERVERPORT=${MDS_WIREGUARD_PORT}
+      - PEERS=${MDS_WIREGUARD_PEERS}
+      - PEERDNS=${MDS_PIHOLE_IP_ADDRESS}
+      - INTERNAL_DNS=${MDS_WIREGUARD_INTERNAL_DNS}
+    volumes:
+      - ./wireguard-config:/config
+      - /lib/modules:/lib/modules
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+
