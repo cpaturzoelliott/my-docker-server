@@ -1,3 +1,4 @@
 .idea
+.env.local
 my-docker-server/etc-dnsmasq.d/01-pihole.conf
 my-docker-server/etc-pihole
