@@ -1,0 +1,40 @@
+version: "3"
+
+# Setup an nginx-proxy network to connect all our web apps to
+networks:
+  default:
+    external:
+      name: nginx-proxy
+
+services:
+  # nginx-proxy to proxy all our port 80 web apps
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - 80:80
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+
+  # pihole DNS server with a sinkhole to block ads & trackers with additional trackers loaded
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    expose: # We only expose the
+      - 80
+    environment:
+      TZ: 'Australia/Adelaide'
+      WEBPASSWORD: password
+      VIRTUAL_HOST: pihole.host.domain.com
+    volumes:
+      - ./etc-pihole/:/etc/pihole/
+      - ./etc-dnsmasq.d/:/etc/dnsmasq.d/
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+    networks:
+      nginx-proxy:
+        ipv4_address: 172.29.0.2
