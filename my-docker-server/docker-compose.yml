@@ -14,27 +14,28 @@ services:
     ports:
       - 80:80
     volumes:
+      - ./etc-nginx/conf.d/:/etc/nginx.conf.d/
       - /var/run/docker.sock:/tmp/docker.sock
 
   # pihole DNS server with a sinkhole to block ads & trackers with additional trackers loaded
   pihole:
+    depends_on:
+      - nginx-proxy
     container_name: pihole
     image: pihole/pihole:latest
     ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-    expose: # We only expose the
+      - 53:53/tcp
+      - 53:53/udp
+    # We only expose the port here as nginx will proxy it to us
+    expose:
       - 80
     environment:
-      TZ: 'Australia/Adelaide'
-      WEBPASSWORD: password
-      VIRTUAL_HOST: pihole.host.domain.com
+      TZ: ${MDS_TIMEZONE}
+      WEBPASSWORD: ${MDS_PIHOLE_PASSWORD}
+      VIRTUAL_HOST: ${MDS_PIHOLE_HOSTNAME}.${MDS_DOMAIN_NAME}
     volumes:
       - ./etc-pihole/:/etc/pihole/
       - ./etc-dnsmasq.d/:/etc/dnsmasq.d/
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
-    networks:
-      nginx-proxy:
-        ipv4_address: 172.29.0.2
