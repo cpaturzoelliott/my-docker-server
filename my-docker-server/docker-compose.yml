@@ -122,6 +122,7 @@ services:
       - ${MDS_MARIADB_PORT}:${MDS_MARIADB_PORT}
     restart: unless-stopped
 
+  # Wordpress - nuf said
   wordpress:
     depends_on: [ nginx-proxy, mariadb ]
     image: wordpress:latest
