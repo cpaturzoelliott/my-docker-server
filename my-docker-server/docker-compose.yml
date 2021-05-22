@@ -61,9 +61,9 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
-      - TZ=${MDS_TIMEZONE}
-      - WEBPASSWORD=${MDS_PI_HOLE_PASSWORD}
-      - VIRTUAL_HOST=${MDS_PI_HOLE_HOSTNAME}.${MDS_DOMAIN_NAME}
+      TZ: ${MDS_TIMEZONE}
+      WEBPASSWORD: ${MDS_PI_HOLE_PASSWORD}
+      VIRTUAL_HOST: ${MDS_PI_HOLE_HOSTNAME}.${MDS_DOMAIN_NAME}
     volumes:
       - ./etc-pihole/:/etc/pihole/
       - ./etc-dnsmasq.d/:/etc/dnsmasq.d/
@@ -86,13 +86,13 @@ services:
       - ${MDS_PI_HOLE_IP_ADDRESS}
       - ${MDS_UNBOUND_IP_ADDRESS}
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=${MDS_TIMEZONE}
-      - SERVERURL=${MDS_WIREGUARD_SERVER_URL}
-      - SERVERPORT=${MDS_WIREGUARD_PORT}
-      - PEERS=${MDS_WIREGUARD_PEERS}
-      - PEERDNS=${MDS_PI_HOLE_IP_ADDRESS}
+      PUID: 1000
+      PGID: 1000
+      TZ: ${MDS_TIMEZONE}
+      SERVERURL: ${MDS_WIREGUARD_SERVER_URL}
+      SERVERPORT: ${MDS_WIREGUARD_PORT}
+      PEERS: ${MDS_WIREGUARD_PEERS}
+      PEERDNS: ${MDS_PI_HOLE_IP_ADDRESS}
     volumes:
       - ./wireguard-config:/config
       - /lib/modules:/lib/modules
@@ -103,20 +103,38 @@ services:
   mariadb:
     image: ghcr.io/linuxserver/mariadb
     container_name: mariadb
+    hostname: ${MDS_MARIADB_HOSTNAME}
     networks:
       nginx-proxy:
         ipv4_address: ${MDS_MARIADB_IP_ADDRESS}
     environment:
-      - PUID=1000
-      - PGID=1000
-      - MYSQL_ROOT_PASSWORD=${MDS_MARIADB_ROOT_PASSWORD}
-      - TZ=${MDS_TIMEZONE}
-      - MYSQL_DATABASE=${MDS_MARIADB_DATABASE}
-      - MYSQL_USER=${MDS_MARIADB_USER}
-      - MYSQL_PASSWORD${MDS_MARIADB_PASSWORD}
+      PUID: 1000
+      PGID: 1000
+      TZ: ${MDS_TIMEZONE}
+      MYSQL_ROOT_PASSWORD: ${MDS_MARIADB_ROOT_PASSWORD}
+      MYSQL_USER: ${MDS_MARIADB_USER}
+      MYSQL_PASSWORD: ${MDS_MARIADB_PASSWORD}
+      # Create Wordpress database
+      MYSQL_DATABASE: wordpress
     volumes:
       - ./mariadb-config:/config
     ports:
-      - 3306:3306
+      - ${MDS_MARIADB_PORT}:${MDS_MARIADB_PORT}
     restart: unless-stopped
 
+  wordpress:
+    depends_on: [ nginx-proxy, mariadb ]
+    image: wordpress:latest
+    container_name: wordpress
+    hostname: ${MDS_WORDPRESS_HOSTNAME}
+    restart: always
+    networks:
+      nginx-proxy:
+        ipv4_address: ${MDS_WORDPRESS_IP_ADDRESS}
+    expose:
+      - 80
+    environment:
+      VIRTUAL_HOST: ${MDS_WORDPRESS_HOSTNAME}.${MDS_DOMAIN_NAME}
+      WORDPRESS_DB_HOST: ${MDS_MARIADB_HOSTNAME}:${MDS_MARIADB_PORT}
+      WORDPRESS_DB_USER: ${MDS_MARIADB_USER}
+      WORDPRESS_DB_PASSWORD: ${MDS_MARIADB_PASSWORD}

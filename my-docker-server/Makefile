@@ -1,4 +1,4 @@
-CONTAINERS=mariadb wireguard pi-hole unbound nginx-proxy
+CONTAINERS=wordpress mariadb wireguard pi-hole unbound nginx-proxy
 
 help:
 	@echo "-------------------------------------"
@@ -26,7 +26,7 @@ detached:
 	docker-compose up -d
 
 nuke:
-	@echo "Removing all containers"
+	@echo "Removing all containers and their data"
 	docker container rm -f $(CONTAINERS)
 	rm -rf etc-dnsmasq.d/01-pihole.conf
 	sudo rm -rf etc-nginx
@@ -36,6 +36,7 @@ nuke:
 	sudo rm -rf etc-unbound/var
 	rm -rf wireguard-config
 	rm -rf mariadb-config
+	rm -rf wordpress-config
 	docker network prune
 
 rebuild:

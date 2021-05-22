@@ -31,7 +31,13 @@ This enables ad-blocking on any device connected to the VPN.
 
 ### [MariaDB]
 
-MariaDB database server 
+MariaDB database server
+
+Used by [Wordpress]
+
+### [Wordpress]
+
+It's Worpress
 
 ------
 
@@ -40,3 +46,4 @@ MariaDB database server
 [Pi-hole]: https://pi-hole.net/
 [Wireguard]: http://wireguard.com
 [MariaDB]: https://mariadb.org/
+[Wordpress]: https://wordpress.com
