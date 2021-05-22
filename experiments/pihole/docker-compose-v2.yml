@@ -28,7 +28,7 @@ services:
       frontproxy_proxy-tier: {}
 
   dhcphelper:
-    build: ./dhcp-helper
+    build: dhcp-helper
     restart: unless-stopped
     network_mode: "host"
     command: -s 172.31.0.100
