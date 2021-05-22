@@ -99,3 +99,24 @@ services:
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
 
+  # MariaDB database server
+  mariadb:
+    image: ghcr.io/linuxserver/mariadb
+    container_name: mariadb
+    networks:
+      nginx-proxy:
+        ipv4_address: ${MDS_MARIADB_IP_ADDRESS}
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD=${MDS_MARIADB_ROOT_PASSWORD}
+      - TZ=${MDS_TIMEZONE}
+      - MYSQL_DATABASE=${MDS_MARIADB_DATABASE}
+      - MYSQL_USER=${MDS_MARIADB_USER}
+      - MYSQL_PASSWORD${MDS_MARIADB_PASSWORD}
+    volumes:
+      - ./mariadb-config:/config
+    ports:
+      - 3306:3306
+    restart: unless-stopped
+

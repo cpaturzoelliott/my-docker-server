@@ -4,3 +4,4 @@ my-docker-server/etc-dnsmasq.d/01-pihole.conf
 my-docker-server/etc-pihole
 my-docker-server/etc-unbound
 my-docker-server/wireguard-config
+my-docker-server/mariadb-config

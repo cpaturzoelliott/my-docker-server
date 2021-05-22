@@ -1,4 +1,4 @@
-CONTAINERS=wireguard pi-hole unbound nginx-proxy
+CONTAINERS=mariadb wireguard pi-hole unbound nginx-proxy
 
 help:
 	@echo "-------------------------------------"
@@ -35,6 +35,7 @@ nuke:
 	sudo rm -rf etc-unbound/dev
 	sudo rm -rf etc-unbound/var
 	rm -rf wireguard-config
+	rm -rf mariadb-config
 	docker network prune
 
 rebuild:

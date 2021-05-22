@@ -29,10 +29,14 @@ Wireguard is running a VPN server with the DNS set to the [Pi-hole] & [Unbound].
 
 This enables ad-blocking on any device connected to the VPN.
 
+### [MariaDB]
+
+MariaDB database server 
 
 ------
 
 [nginx-proxy]: https://github.com/nginx-proxy/nginx-proxy
 [Unbound]: https://nlnetlabs.nl/projects/unbound/about/
 [Pi-hole]: https://pi-hole.net/
-[wireguard]: http://wireguard.com
+[Wireguard]: http://wireguard.com
+[MariaDB]: https://mariadb.org/
